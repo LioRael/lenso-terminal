@@ -17,6 +17,11 @@ Products continue to own argv, stdout/stderr, exit codes, process lifecycle,
 Host selection, and maintenance commands. Feature repositories continue to own
 their command-provider Plugins and the domain Capabilities those commands use.
 
+Lenso CLI therefore keeps `plugin`, `plugins`, `app`, `run`, and `doctor`
+static, then delegates other App command argv to the selected Host. The Host
+uses this repository's aggregate and CLI consumer in one immutable Generation;
+Lenso CLI does not cache or reconstruct a catalog across the process boundary.
+
 The first extraction intentionally excludes Agent-specific command providers,
 Agent Host integration, and the TUI panel/suggestion contracts. Those packages
 remain with Lenso Agent until another real product needs the same roles.

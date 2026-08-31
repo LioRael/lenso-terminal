@@ -32,8 +32,11 @@ extraction requires a second real consumer and its own deletion proof.
 
 ## Consequences
 
-Lenso Agent and Lenso CLI consume one exact terminal release or revision. No
-consumer uses a sibling path dependency or carries a copied contract. Removing
-one feature command provider removes only its paths; removing the aggregate or
-CLI consumer removes terminal composition while leaving feature behavior and
-Host maintenance commands intact.
+Lenso Agent and Hosts selected by Lenso CLI consume one exact terminal release
+or revision. Lenso CLI keeps product maintenance commands static and delegates
+App command argv unchanged to the selected Host, so discovery and execution
+retain one Host-owned Generation lease. No consumer uses a sibling path
+dependency or carries a copied contract. Removing one feature command provider
+removes only its paths; removing the aggregate or CLI consumer removes terminal
+composition while leaving feature behavior and Host maintenance commands
+intact.
