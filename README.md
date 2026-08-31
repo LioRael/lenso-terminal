@@ -31,11 +31,11 @@ remain with Lenso Agent until another real product needs the same roles.
 Run Cargo through the shared framework wrapper when it is available:
 
 ```sh
-/Users/leosouthey/Projects/framework/.lenso-tools/bin/lenso-cargo fmt --all -- --check
+cargo fmt --all -- --check
 ./scripts/check-contracts.sh
-/Users/leosouthey/Projects/framework/.lenso-tools/bin/lenso-cargo check --locked --workspace --all-targets
-/Users/leosouthey/Projects/framework/.lenso-tools/bin/lenso-cargo test --locked --workspace --all-targets
-/Users/leosouthey/Projects/framework/.lenso-tools/bin/lenso-cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo check --locked --workspace --all-targets
+cargo test --locked --workspace --all-targets
+cargo clippy --locked --workspace --all-targets -- -D warnings
 ./scripts/check-package-readiness.sh
 ```
 
