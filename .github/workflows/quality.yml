@@ -31,10 +31,7 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Check generated contracts
         run: |
-          cargo install --locked \
-            --git https://github.com/LioRael/lenso-protocols \
-            --rev 9d2774c767fd64a6cc63a5ac04360e9cb92816da \
-            lenso-contract-codegen
+          cargo install --locked --version '=0.6.5' lenso-contract-codegen
           ./scripts/check-contracts.sh
       - name: Check every target
         run: cargo check --locked --workspace --all-targets

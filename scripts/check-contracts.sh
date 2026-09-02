@@ -8,7 +8,7 @@ contract_codegen_help="$("${contract_codegen}" 2>&1 || true)"
 if ! grep -q 'lenso-contract-codegen workspace' <<<"${contract_codegen_help}"; then
   printf '%s\n' \
     "error: ${contract_codegen} does not support workspace contract commands" \
-    'install lenso-contract-codegen from the revision pinned in Cargo.toml,' \
+    'install lenso-contract-codegen 0.6.5 from crates.io,' \
     'or set LENSO_CONTRACT_CODEGEN to that executable' >&2
   exit 2
 fi
