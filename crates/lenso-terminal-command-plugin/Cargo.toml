@@ -1,6 +1,6 @@
 [package]
 name = "lenso-terminal-command-plugin"
-version = "0.1.0"
+version = "0.1.1"
 description = "Validated aggregate terminal command runtime Plugin."
 edition.workspace = true
 license.workspace = true
