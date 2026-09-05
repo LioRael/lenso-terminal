@@ -3,13 +3,16 @@ use std::{fmt, rc::Rc};
 use futures::future::LocalBoxFuture;
 use lenso_kernel::{InvocationContext, NativeRequestEndpoint, NativeRequestFuture, NativeRequestHandle, NativeStream, NativeStreamEndpoint, NativeStreamHandle, NativeStreamSession, PluginDependencies, RequestCapability, RuntimeFailure, StreamCapability, StreamEvent};
 
-use lenso_plugin_authoring::{BoundCapabilityClient, CapabilityClient, CapabilityClientMany};
+use lenso_plugin_authoring::{BoundCapabilityClient, CapabilityClient, CapabilityClientMany, CapabilityReference};
 pub const CAPABILITY_ID: &str = "lenso.terminal.command@1";
 pub const DESCRIPTOR_VERSION: &str = "1.0.0";
+pub const DESCRIPTOR_DIGEST: &str = "sha256:7793d8a35c0874568625545652b8773092f63b98a70a32f05a0d82e417006b3b";
 pub const PORTABLE: bool = true;
 pub const CROSS_LANE_TRANSFER: bool = false;
 pub const COMMAND_CAPABILITY_ID: &str = CAPABILITY_ID;
 pub const COMMAND_DESCRIPTOR_VERSION: &str = DESCRIPTOR_VERSION;
+pub const COMMAND_DESCRIPTOR_DIGEST: &str = DESCRIPTOR_DIGEST;
+pub const COMMAND_CONTRACT: CapabilityReference<CommandClient> = CapabilityReference::new(CAPABILITY_ID, DESCRIPTOR_VERSION, DESCRIPTOR_DIGEST);
 
 #[doc(hidden)]
 #[macro_export]
@@ -17,11 +20,23 @@ macro_rules! __lenso_provided_command { () => { "{\"capability_id\":\"lenso.term
 
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __lenso_required_command_client { () => { "{\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"one\"}" }; }
+macro_rules! __lenso_required_command_client {
+    () => { "{\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"one\"}" };
+    ($requirement_id:literal) => { concat!("{\"requirement_id\":", stringify!($requirement_id), ",\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"one\"}") };
+}
 
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __lenso_required_many_command_client { () => { "{\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"many\"}" }; }
+macro_rules! __lenso_required_optional_command_client {
+    ($requirement_id:literal) => { concat!("{\"requirement_id\":", stringify!($requirement_id), ",\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"optional\"}") };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __lenso_required_many_command_client {
+    () => { "{\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"many\"}" };
+    ($requirement_id:literal) => { concat!("{\"requirement_id\":", stringify!($requirement_id), ",\"capability_id\":\"lenso.terminal.command@1\",\"descriptor_version\":\"1.0.0\",\"cardinality\":\"many\"}") };
+}
 
 pub const CATALOG_OPERATION: &str = "catalog";
 pub const EXECUTE_OPERATION: &str = "execute";
@@ -448,6 +463,56 @@ macro_rules! __lenso_native_lower_command {
     };
 }
 
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __lenso_native_lower_object_command {
+    ($object:ty, $plugin:ty, $support:path) => {
+        use $support as __LensoNativeSupportCommand;
+        impl $crate::CommandProvider for $object {
+        fn catalog(&self, context: __LensoNativeSupportCommand::InvocationContext, request: $crate::CatalogRequest) -> __LensoNativeSupportCommand::NativeRequestFuture<$crate::CommandCatalog> {
+            let object = self.clone();
+            ::std::boxed::Box::pin(async move {
+                let plugin = object.get()?;
+                let result = <$plugin>::catalog(plugin.as_ref(), context, request).await;
+                $crate::__LensoIntoCommandCatalogResult::__lenso_into_result(result)
+            })
+        }
+        fn execute(&self, context: __LensoNativeSupportCommand::InvocationContext, request: $crate::ExecuteOpen) -> __LensoNativeSupportCommand::LocalBoxFuture<'static, Result<Box<dyn __LensoNativeSupportCommand::NativeStreamSession>, $crate::CommandExecuteInvocationError>> {
+            let object = self.clone();
+            ::std::boxed::Box::pin(async move {
+                let plugin = object.get().map_err($crate::CommandExecuteInvocationError::Runtime)?;
+                let result = <$plugin>::execute(plugin.as_ref(), context, request).await;
+                $crate::__LensoIntoCommandExecuteStreamResult::__lenso_into_result(result)
+            })
+        }
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __lenso_native_lower_trait_object_command {
+    ($object:ty, $plugin:ty, $support:path) => {
+        use $support as __LensoNativeSupportCommand;
+        impl $crate::CommandProvider for $object {
+        fn catalog(&self, context: __LensoNativeSupportCommand::InvocationContext, request: $crate::CatalogRequest) -> __LensoNativeSupportCommand::NativeRequestFuture<$crate::CommandCatalog> {
+            let object = self.clone();
+            ::std::boxed::Box::pin(async move {
+                let plugin = object.get()?;
+                <$plugin as $crate::CommandProvider>::catalog(plugin.as_ref(), context, request).await
+            })
+        }
+        fn execute(&self, context: __LensoNativeSupportCommand::InvocationContext, request: $crate::ExecuteOpen) -> __LensoNativeSupportCommand::LocalBoxFuture<'static, Result<Box<dyn __LensoNativeSupportCommand::NativeStreamSession>, $crate::CommandExecuteInvocationError>> {
+            let object = self.clone();
+            ::std::boxed::Box::pin(async move {
+                let plugin = object.get().map_err($crate::CommandExecuteInvocationError::Runtime)?;
+                <$plugin as $crate::CommandProvider>::execute(plugin.as_ref(), context, request).await
+            })
+        }
+        }
+    };
+}
+
 #[derive(Debug)]
 struct CommandRequestEndpoint { provider: Rc<dyn CommandProvider> }
 
@@ -554,6 +619,13 @@ impl CommandClient {
         <Self as CapabilityClient>::from_dependencies(dependencies)
     }
 
+    pub fn from_requirement(
+        dependencies: &PluginDependencies,
+        requirement_id: &str,
+    ) -> Result<Self, RuntimeFailure> {
+        <Self as CapabilityClient>::from_requirement(dependencies, requirement_id)
+    }
+
     pub async fn catalog(&self, request: CatalogRequest) -> Result<CatalogResponse, CommandCatalogInvocationError> {
         self.catalog.invoke(CATALOG_OPERATION, request).await
             .map_err(CommandCatalogInvocationError::Runtime)?
@@ -593,6 +665,14 @@ impl CapabilityClient for CommandClient {
         })
     }
 
+    fn from_requirement(
+        dependencies: &PluginDependencies,
+        requirement_id: &str,
+    ) -> Result<Self, RuntimeFailure> {
+        let dependencies = dependencies.requirement(requirement_id)?;
+        Self::from_dependencies(&dependencies)
+    }
+
     fn already_connected() -> RuntimeFailure {
         RuntimeFailure::PluginFailure {
             detail: format!("Capability Port {CAPABILITY_ID} was connected more than once"),
@@ -618,6 +698,14 @@ impl CapabilityClientMany for CommandClient {
                 ))
             })
             .collect()
+    }
+
+    fn many_from_requirement(
+        dependencies: &PluginDependencies,
+        requirement_id: &str,
+    ) -> Result<Vec<BoundCapabilityClient<Self>>, RuntimeFailure> {
+        let dependencies = dependencies.requirement(requirement_id)?;
+        Self::many_from_dependencies(&dependencies)
     }
 }
 
@@ -660,6 +748,8 @@ impl lenso_runtime_codec::JsonCapabilityCodec for CommandJsonCodec {
     fn capability_id(&self) -> &'static str { CAPABILITY_ID }
 
     fn descriptor_version(&self) -> &'static str { DESCRIPTOR_VERSION }
+
+    fn descriptor_digest(&self) -> &'static str { DESCRIPTOR_DIGEST }
 
     fn request_operations(&self) -> &'static [&'static str] { &[CATALOG_OPERATION] }
     fn stream_operations(&self) -> &'static [&'static str] { &[EXECUTE_OPERATION] }
