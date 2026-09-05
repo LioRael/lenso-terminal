@@ -1,6 +1,6 @@
 [package]
 name = "lenso-capability-terminal-command"
-version = "0.1.0"
+version = "0.1.1"
 description = "Validated terminal command runtime Capability."
 edition.workspace = true
 license.workspace = true

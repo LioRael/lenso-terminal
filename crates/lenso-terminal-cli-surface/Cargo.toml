@@ -1,6 +1,6 @@
 [package]
 name = "lenso-terminal-cli-surface"
-version = "0.1.0"
+version = "0.1.1"
 description = "Clap-backed process surface for validated Lenso terminal commands."
 edition.workspace = true
 license.workspace = true

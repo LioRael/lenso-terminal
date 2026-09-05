@@ -19,8 +19,8 @@ rust-version = "1.94"
 clap = { version = "4.6", features = ["derive", "string"] }
 futures = "0.3"
 lenso = { version = "0.5.5" }
-lenso-capability-terminal-command = { version = "0.1.0", path = "crates/lenso-capability-terminal-command" }
-lenso-capability-terminal-command-provider = { version = "0.1.0", path = "crates/lenso-capability-terminal-command-provider" }
+lenso-capability-terminal-command = { version = "0.1.1", path = "crates/lenso-capability-terminal-command" }
+lenso-capability-terminal-command-provider = { version = "0.1.1", path = "crates/lenso-capability-terminal-command-provider" }
 lenso-contract-authoring = { version = "0.1.1" }
 lenso-contract-codegen = { version = "0.7.3" }
 lenso-contract-runtime = { version = "0.2.0" }
